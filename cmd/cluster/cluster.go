@@ -23,7 +23,9 @@ package cluster
 
 import (
     "fmt"
+    "time"
 
+    "github.com/briandowns/spinner"
     "github.com/spf13/cobra"
     "go-cli/internal/cluster"
 )
@@ -49,9 +51,17 @@ var createCmd = &cobra.Command{
     Short: "Create a new cluster",
     Long:  `Create a new cluster with the specified configuration.`,
     Run: func(cmd *cobra.Command, args []string) {
+        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+        s.Suffix = " Creating cluster..."
+        s.Start()
+
         err := cluster.Create()
+
+        s.Stop()
         if err != nil {
             fmt.Printf("Error creating cluster: %v\n", err)
+        } else {
+            fmt.Println("Cluster created successfully!")
         }
     },
 }
@@ -62,9 +72,17 @@ var deleteCmd = &cobra.Command{
     Short: "Delete a cluster",
     Long:  `Delete an existing cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
+        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+        s.Suffix = " Deleting cluster..."
+        s.Start()
+
         err := cluster.Delete()
+
+        s.Stop()
         if err != nil {
             fmt.Printf("Error deleting cluster: %v\n", err)
+        } else {
+            fmt.Println("Cluster deleted successfully!")
         }
     },
 }
@@ -75,9 +93,17 @@ var startCmd = &cobra.Command{
     Short: "Start a cluster",
     Long:  `Start an existing cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
+        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+        s.Suffix = " Starting cluster..."
+        s.Start()
+
         err := cluster.Start()
+
+        s.Stop()
         if err != nil {
             fmt.Printf("Error starting cluster: %v\n", err)
+        } else {
+            fmt.Println("Cluster started successfully!")
         }
     },
 }
@@ -88,9 +114,17 @@ var stopCmd = &cobra.Command{
     Short: "Stop a cluster",
     Long:  `Stop a running cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
+        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+        s.Suffix = " Stopping cluster..."
+        s.Start()
+
         err := cluster.Stop()
+
+        s.Stop()
         if err != nil {
             fmt.Printf("Error stopping cluster: %v\n", err)
+        } else {
+            fmt.Println("Cluster stopped successfully!")
         }
     },
 }

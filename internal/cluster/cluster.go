@@ -21,57 +21,24 @@ THE SOFTWARE.
 */
 package cluster
 
-import (
-	"fmt"
-	"time"
-
-	"github.com/briandowns/spinner"
-)
+import "time"
 
 func Create() error {
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = " Creating cluster..."
-	s.Start()
-	
 	time.Sleep(2 * time.Second)
-	
-	s.Stop()
-	fmt.Println("Cluster created successfully!")
 	return nil
 }
 
 func Delete() error {
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = " Deleting cluster..."
-	s.Start()
-	
 	time.Sleep(2 * time.Second)
-	
-	s.Stop()
-	fmt.Println("Cluster deleted successfully!")
 	return nil
 }
 
 func Start() error {
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = " Starting cluster..."
-	s.Start()
-	
 	time.Sleep(2 * time.Second)
-	
-	s.Stop()
-	fmt.Println("Cluster started successfully!")
 	return nil
 }
 
 func Stop() error {
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = " Stopping cluster..."
-	s.Start()
-	
 	time.Sleep(2 * time.Second)
-	
-	s.Stop()
-	fmt.Println("Cluster stopped successfully!")
 	return nil
 }
