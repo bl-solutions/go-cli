@@ -22,41 +22,20 @@ THE SOFTWARE.
 package cluster
 
 import (
-    "fmt"
+	"fmt"
+	"time"
 
-    "github.com/spf13/cobra"
-    "go-cli/internal/cluster"
+	"github.com/briandowns/spinner"
 )
 
-// clusterCmd represents the cluster command
-var clusterCmd = &cobra.Command{
-    Use:   "cluster",
-    Short: "A brief description of your command",
-    Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-    Run: func(cmd *cobra.Command, args []string) {
-        fmt.Println("cluster called")
-    },
-}
-
-// createCmd represents the create subcommand
-var createCmd = &cobra.Command{
-    Use:   "create",
-    Short: "Create a new cluster",
-    Long:  `Create a new cluster with the specified configuration.`,
-    Run: func(cmd *cobra.Command, args []string) {
-        err := cluster.Create()
-        if err != nil {
-            fmt.Printf("Error creating cluster: %v\n", err)
-        }
-    },
-}
-
-func GetCommand() *cobra.Command {
-    clusterCmd.AddCommand(createCmd)
-    return clusterCmd
+func Create() error {
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Suffix = " Creating cluster..."
+	s.Start()
+	
+	time.Sleep(2 * time.Second)
+	
+	s.Stop()
+	fmt.Println("Cluster created successfully!")
+	return nil
 }
