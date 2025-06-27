@@ -74,8 +74,33 @@ var dependenciesCmd = &cobra.Command{
     },
 }
 
+// appCmd represents the app subcommand
+var appCmd = &cobra.Command{
+    Use:   "app [app-name]",
+    Short: "Deploy an application",
+    Long:  `Deploy a specific application to the cluster.`,
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        appName := args[0]
+        
+        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+        s.Suffix = fmt.Sprintf(" Deploying application %s...", appName)
+        s.Start()
+        
+        err := deploy.DeployApp(appName)
+        
+        s.Stop()
+        if err != nil {
+            fmt.Printf("Error deploying application: %v\n", err)
+        } else {
+            fmt.Printf("Application %s deployed successfully!\n", appName)
+        }
+    },
+}
+
 func GetCommand() *cobra.Command {
     dependenciesCmd.Flags().Bool("optional", false, "Deploy optional dependencies")
     deployCmd.AddCommand(dependenciesCmd)
+    deployCmd.AddCommand(appCmd)
     return deployCmd
 }

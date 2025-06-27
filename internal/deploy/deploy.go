@@ -27,3 +27,8 @@ func DeployDependencies(optional bool) error {
 	time.Sleep(2 * time.Second)
 	return nil
 }
+
+func DeployApp(appName string) error {
+	time.Sleep(2 * time.Second)
+	return nil
+}
