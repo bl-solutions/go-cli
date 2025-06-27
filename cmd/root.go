@@ -27,6 +27,7 @@ import (
     "github.com/spf13/cobra"
     "go-cli/cmd/cluster"
     "go-cli/cmd/build"
+    "go-cli/cmd/deploy"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -67,4 +68,5 @@ func init() {
     // Add subcommands
     RootCmd.AddCommand(cluster.GetCommand())
     RootCmd.AddCommand(build.GetCommand())
+    RootCmd.AddCommand(deploy.GetCommand())
 }
