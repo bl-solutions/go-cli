@@ -27,6 +27,7 @@ import (
 
     "github.com/briandowns/spinner"
     "github.com/spf13/cobra"
+    "github.com/spf13/viper"
     "go-cli/internal/build"
 )
 
@@ -39,11 +40,24 @@ var buildCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
         appName := args[0]
         
+        // Read configuration for the application
+        var config build.BuildConfig
+        if err := viper.UnmarshalKey(appName, &config); err != nil {
+            fmt.Printf("Error reading configuration for app '%s': %v\n", appName, err)
+            return
+        }
+        
+        // Check if configuration exists
+        if config.ProjectPath == "" {
+            fmt.Printf("No configuration found for application '%s'\n", appName)
+            return
+        }
+        
         s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
         s.Suffix = fmt.Sprintf(" Building application %s...", appName)
         s.Start()
 
-        err := build.Build(appName)
+        err := build.Build(config)
 
         s.Stop()
         if err != nil {

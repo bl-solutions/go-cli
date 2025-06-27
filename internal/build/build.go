@@ -23,7 +23,19 @@ package build
 
 import "time"
 
-func Build(appName string) error {
+type BuildConfig struct {
+	ProjectPath string            `mapstructure:"project_path"`
+	Build       BuildDetails      `mapstructure:"build"`
+}
+
+type BuildDetails struct {
+	ImageName  string   `mapstructure:"image_name"`
+	Dockerfile string   `mapstructure:"dockerfile"`
+	Context    string   `mapstructure:"context"`
+	BuildArgs  []string `mapstructure:"build_args,omitempty"`
+}
+
+func Build(config BuildConfig) error {
 	time.Sleep(2 * time.Second)
 	return nil
 }

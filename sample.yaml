@@ -1,0 +1,14 @@
+api:
+  project_path: "/tmp/api"
+  build:
+    image_name: api:local
+    dockerfile: Dockerfile
+    context: .
+    build_args:
+      - "PYTHON_VERSION=3.12"
+ui:
+  project_path: "/tmp/ui"
+  build:
+    image_name: ui:local
+    dockerfile: Dockerfile
+    context: .

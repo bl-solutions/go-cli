@@ -28,8 +28,8 @@ import (
 
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
-    "go-cli/cmd/cluster"
     "go-cli/cmd/build"
+    "go-cli/cmd/cluster"
     "go-cli/cmd/deploy"
 )
 
@@ -102,7 +102,11 @@ func initConfig() {
     viper.AutomaticEnv() // read in environment variables that match
 
     // If a config file is found, read it in.
-    if err := viper.ReadInConfig(); err == nil {
+    if err := viper.ReadInConfig(); err != nil {
+        if cfgFile != "" {
+            fmt.Printf("Error reading config file '%s': %v\n", cfgFile, err)
+        }
+    } else {
         fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
     }
 }
