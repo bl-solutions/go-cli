@@ -23,7 +23,7 @@ package build
 
 import "time"
 
-func Build() error {
+func Build(appName string) error {
 	time.Sleep(2 * time.Second)
 	return nil
 }

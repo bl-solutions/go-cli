@@ -32,21 +32,24 @@ import (
 
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
-    Use:   "build",
-    Short: "Build the application",
-    Long:  `Build the application with the specified configuration.`,
+    Use:   "build [app-name]",
+    Short: "Build an application",
+    Long:  `Build a specific application.`,
+    Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
+        appName := args[0]
+        
         s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = " Building application..."
+        s.Suffix = fmt.Sprintf(" Building application %s...", appName)
         s.Start()
 
-        err := build.Build()
+        err := build.Build(appName)
 
         s.Stop()
         if err != nil {
             fmt.Printf("Error building application: %v\n", err)
         } else {
-            fmt.Println("Build completed successfully!")
+            fmt.Printf("Application %s built successfully!\n", appName)
         }
     },
 }
