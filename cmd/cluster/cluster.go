@@ -56,7 +56,49 @@ var createCmd = &cobra.Command{
     },
 }
 
+// deleteCmd represents the delete subcommand
+var deleteCmd = &cobra.Command{
+    Use:   "delete",
+    Short: "Delete a cluster",
+    Long:  `Delete an existing cluster.`,
+    Run: func(cmd *cobra.Command, args []string) {
+        err := cluster.Delete()
+        if err != nil {
+            fmt.Printf("Error deleting cluster: %v\n", err)
+        }
+    },
+}
+
+// startCmd represents the start subcommand
+var startCmd = &cobra.Command{
+    Use:   "start",
+    Short: "Start a cluster",
+    Long:  `Start an existing cluster.`,
+    Run: func(cmd *cobra.Command, args []string) {
+        err := cluster.Start()
+        if err != nil {
+            fmt.Printf("Error starting cluster: %v\n", err)
+        }
+    },
+}
+
+// stopCmd represents the stop subcommand
+var stopCmd = &cobra.Command{
+    Use:   "stop",
+    Short: "Stop a cluster",
+    Long:  `Stop a running cluster.`,
+    Run: func(cmd *cobra.Command, args []string) {
+        err := cluster.Stop()
+        if err != nil {
+            fmt.Printf("Error stopping cluster: %v\n", err)
+        }
+    },
+}
+
 func GetCommand() *cobra.Command {
     clusterCmd.AddCommand(createCmd)
+    clusterCmd.AddCommand(deleteCmd)
+    clusterCmd.AddCommand(startCmd)
+    clusterCmd.AddCommand(stopCmd)
     return clusterCmd
 }
