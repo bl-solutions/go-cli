@@ -26,7 +26,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 )
 
 type AppConfig struct {
@@ -39,8 +38,53 @@ type DeployConfig struct {
 	ValuesFile string `mapstructure:"values_file"`
 }
 
-func DeployDependencies(optional bool) error {
-	time.Sleep(2 * time.Second)
+type DependencyConfig struct {
+	ChartName   string `mapstructure:"chart_name"`
+	ValuesFile  string `mapstructure:"values_file"`
+	Version     string `mapstructure:"version"`
+	Namespace   string `mapstructure:"namespace"`
+	Optional    bool   `mapstructure:"optional,omitempty"`
+}
+
+type DependenciesConfig struct {
+	Dependencies map[string]DependencyConfig `mapstructure:"dependencies"`
+}
+
+func DeployDependencies(config DependenciesConfig, optional bool) error {
+	for depName, depConfig := range config.Dependencies {
+		// Skip optional dependencies if not requested
+		if depConfig.Optional && !optional {
+			continue
+		}
+
+		// Build Helm command
+		args := []string{"upgrade", "--install", depName, depConfig.ChartName}
+		
+		// Add version if specified
+		if depConfig.Version != "" {
+			args = append(args, "--version", depConfig.Version)
+		}
+		
+		// Add namespace if specified
+		if depConfig.Namespace != "" {
+			args = append(args, "--namespace", depConfig.Namespace, "--create-namespace")
+		}
+		
+		// Add values file if specified
+		if depConfig.ValuesFile != "" {
+			args = append(args, "-f", depConfig.ValuesFile)
+		}
+
+		// Execute Helm command
+		cmd := exec.Command("helm", args...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("helm deployment failed for dependency '%s': %w", depName, err)
+		}
+	}
+
 	return nil
 }
 

@@ -49,6 +49,21 @@ var dependenciesCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
         optional, _ := cmd.Flags().GetBool("optional")
         
+        // Read dependencies configuration
+        var deps map[string]deploy.DependencyConfig
+        if err := viper.UnmarshalKey("dependencies", &deps); err != nil {
+            fmt.Printf("Error reading dependencies configuration: %v\n", err)
+            return
+        }
+        
+        // Check if configuration exists
+        if len(deps) == 0 {
+            fmt.Println("No dependencies configuration found")
+            return
+        }
+        
+        config := deploy.DependenciesConfig{Dependencies: deps}
+        
         var message string
         if optional {
             message = " Deploying dependencies (including optional)..."
@@ -60,7 +75,7 @@ var dependenciesCmd = &cobra.Command{
         s.Suffix = message
         s.Start()
         
-        err := deploy.DeployDependencies(optional)
+        err := deploy.DeployDependencies(config, optional)
         
         s.Stop()
         if err != nil {
