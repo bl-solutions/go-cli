@@ -40,7 +40,7 @@ type BuildDetails struct {
 	BuildArgs  []string `mapstructure:"build_args,omitempty"`
 }
 
-func Build(config BuildConfig) error {
+func Build(config BuildConfig, verbose bool) error {
 	// Validate required fields
 	if config.Build.ImageName == "" {
 		return fmt.Errorf("image_name is required")
@@ -77,8 +77,11 @@ func Build(config BuildConfig) error {
 
 	// Execute Docker command
 	cmd := exec.Command("docker", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 	
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("docker build failed: %w", err)

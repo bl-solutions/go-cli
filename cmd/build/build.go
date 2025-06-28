@@ -39,6 +39,7 @@ var buildCmd = &cobra.Command{
     Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
         appName := args[0]
+        verbose, _ := cmd.Flags().GetBool("verbose")
         
         // Read configuration for the application
         var config build.BuildConfig
@@ -53,13 +54,19 @@ var buildCmd = &cobra.Command{
             return
         }
         
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = fmt.Sprintf(" Building application %s...", appName)
-        s.Start()
+        var s *spinner.Spinner
+        if !verbose {
+            s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+            s.Suffix = fmt.Sprintf(" Building application %s...", appName)
+            s.Start()
+        }
 
-        err := build.Build(config)
+        err := build.Build(config, verbose)
 
-        s.Stop()
+        if !verbose && s != nil {
+            s.Stop()
+        }
+        
         if err != nil {
             fmt.Printf("Error building application: %v\n", err)
         } else {
@@ -69,5 +76,6 @@ var buildCmd = &cobra.Command{
 }
 
 func GetCommand() *cobra.Command {
+    buildCmd.Flags().Bool("verbose", false, "Show Docker build output")
     return buildCmd
 }
