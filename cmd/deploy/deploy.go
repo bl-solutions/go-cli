@@ -37,7 +37,7 @@ var deployCmd = &cobra.Command{
     Short: "Deploy resources to the cluster",
     Long:  `Deploy various resources and dependencies to the cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
-        fmt.Println("deploy called")
+        cmd.Help()
     },
 }
 
