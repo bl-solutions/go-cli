@@ -72,6 +72,16 @@ var deleteCmd = &cobra.Command{
     Short: "Delete a cluster",
     Long:  `Delete an existing cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
+        // Ask for confirmation
+        fmt.Print("Are you sure you want to delete the cluster? (y/N): ")
+        var response string
+        fmt.Scanln(&response)
+        
+        if response != "y" && response != "Y" {
+            fmt.Println("Cluster deletion cancelled.")
+            return
+        }
+        
         s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
         s.Suffix = " Deleting cluster..."
         s.Start()
