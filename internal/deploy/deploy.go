@@ -36,6 +36,7 @@ type AppConfig struct {
 type DeployConfig struct {
 	ChartPath  string `mapstructure:"chart_path"`
 	ValuesFile string `mapstructure:"values_file"`
+	Namespace  string `mapstructure:"namespace"`
 }
 
 type DependencyConfig struct {
@@ -96,6 +97,9 @@ func DeployApp(config AppConfig, appName string) error {
 	if config.Deploy.ValuesFile == "" {
 		return fmt.Errorf("values_file is required")
 	}
+	if config.Deploy.Namespace == "" {
+		return fmt.Errorf("namespace is required")
+	}
 
 	// Change to project directory
 	if err := os.Chdir(config.ProjectPath); err != nil {
@@ -115,7 +119,7 @@ func DeployApp(config AppConfig, appName string) error {
 	}
 
 	// Build Helm command
-	args := []string{"upgrade", "--install", appName, chartPath, "-f", valuesPath}
+	args := []string{"upgrade", "--install", appName, chartPath, "-f", valuesPath, "--namespace", config.Deploy.Namespace, "--create-namespace"}
 
 	// Execute Helm command
 	cmd := exec.Command("helm", args...)

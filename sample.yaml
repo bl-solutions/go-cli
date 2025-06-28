@@ -9,6 +9,7 @@ api:
   deploy:
     chart_path: ./helm/chart
     values_file: ./helm/values.yaml
+    namespace: application
 
 ui:
   project_path: "/tmp/ui"
@@ -19,6 +20,7 @@ ui:
   deploy:
     chart_path: ./k8s/helm
     values_file: ./k8s/values.yaml
+    namespace: application
 
 dependencies:
   redis:
