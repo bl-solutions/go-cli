@@ -26,6 +26,7 @@ import (
     "time"
 
     "github.com/spf13/cobra"
+    "github.com/spf13/viper"
     "github.com/briandowns/spinner"
     "go-cli/internal/deploy"
 )
@@ -83,11 +84,24 @@ var appCmd = &cobra.Command{
     Run: func(cmd *cobra.Command, args []string) {
         appName := args[0]
         
+        // Read configuration for the application
+        var config deploy.AppConfig
+        if err := viper.UnmarshalKey(appName, &config); err != nil {
+            fmt.Printf("Error reading configuration for app '%s': %v\n", appName, err)
+            return
+        }
+        
+        // Check if configuration exists
+        if config.ProjectPath == "" {
+            fmt.Printf("No configuration found for application '%s'\n", appName)
+            return
+        }
+        
         s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
         s.Suffix = fmt.Sprintf(" Deploying application %s...", appName)
         s.Start()
         
-        err := deploy.DeployApp(appName)
+        err := deploy.DeployApp(config, appName)
         
         s.Stop()
         if err != nil {
