@@ -21,7 +21,12 @@ THE SOFTWARE.
 */
 package build
 
-import "time"
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+)
 
 type BuildConfig struct {
 	ProjectPath string            `mapstructure:"project_path"`
@@ -36,6 +41,48 @@ type BuildDetails struct {
 }
 
 func Build(config BuildConfig) error {
-	time.Sleep(2 * time.Second)
+	// Validate required fields
+	if config.Build.ImageName == "" {
+		return fmt.Errorf("image_name is required")
+	}
+	if config.Build.Dockerfile == "" {
+		return fmt.Errorf("dockerfile is required")
+	}
+	if config.Build.Context == "" {
+		return fmt.Errorf("context is required")
+	}
+
+	// Change to project directory
+	if err := os.Chdir(config.ProjectPath); err != nil {
+		return fmt.Errorf("failed to change to project directory '%s': %w", config.ProjectPath, err)
+	}
+
+	// Build Docker command
+	args := []string{"build"}
+	
+	// Add tag
+	args = append(args, "-t", config.Build.ImageName)
+	
+	// Add dockerfile path
+	dockerfilePath := filepath.Join(config.Build.Context, config.Build.Dockerfile)
+	args = append(args, "-f", dockerfilePath)
+	
+	// Add build args
+	for _, buildArg := range config.Build.BuildArgs {
+		args = append(args, "--build-arg", buildArg)
+	}
+	
+	// Add context
+	args = append(args, config.Build.Context)
+
+	// Execute Docker command
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("docker build failed: %w", err)
+	}
+
 	return nil
 }
