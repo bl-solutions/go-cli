@@ -1,26 +1,27 @@
-api:
-  project_path: "/tmp/api"
-  build:
-    image_name: api:local
-    dockerfile: Dockerfile
-    context: .
-    build_args:
-      - "PYTHON_VERSION=3.12"
-  deploy:
-    chart_path: ./helm/chart
-    values_file: ./helm/values.yaml
-    namespace: application
+apps:
+  api:
+    project_path: "/tmp/api"
+    build:
+      image_name: api:local
+      dockerfile: Dockerfile
+      context: .
+      build_args:
+        - "PYTHON_VERSION=3.12"
+    deploy:
+      chart_path: ./helm/chart
+      values_file: ./helm/values.yaml
+      namespace: application
 
-ui:
-  project_path: "/tmp/ui"
-  build:
-    image_name: ui:local
-    dockerfile: Dockerfile
-    context: .
-  deploy:
-    chart_path: ./k8s/helm
-    values_file: ./k8s/values.yaml
-    namespace: application
+  ui:
+    project_path: "/tmp/ui"
+    build:
+      image_name: ui:local
+      dockerfile: Dockerfile
+      context: .
+    deploy:
+      chart_path: ./k8s/helm
+      values_file: ./k8s/values.yaml
+      namespace: application
 
 dependencies:
   redis:

@@ -48,6 +48,7 @@ var dependenciesCmd = &cobra.Command{
     Long:  `Deploy application dependencies like PostgreSQL, Redis, etc. to the cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
         optional, _ := cmd.Flags().GetBool("optional")
+        verbose, _ := cmd.Flags().GetBool("verbose")
         
         // Read dependencies configuration
         var deps map[string]deploy.DependencyConfig
@@ -71,13 +72,19 @@ var dependenciesCmd = &cobra.Command{
             message = " Deploying dependencies..."
         }
         
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = message
-        s.Start()
+        var s *spinner.Spinner
+        if !verbose {
+            s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+            s.Suffix = message
+            s.Start()
+        }
         
-        err := deploy.DeployDependencies(config, optional)
+        err := deploy.DeployDependencies(config, optional, verbose)
         
-        s.Stop()
+        if !verbose && s != nil {
+            s.Stop()
+        }
+        
         if err != nil {
             fmt.Printf("Error deploying dependencies: %v\n", err)
         } else {
@@ -98,10 +105,12 @@ var appCmd = &cobra.Command{
     Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
         appName := args[0]
+        verbose, _ := cmd.Flags().GetBool("verbose")
         
         // Read configuration for the application
         var config deploy.AppConfig
-        if err := viper.UnmarshalKey(appName, &config); err != nil {
+        configKey := fmt.Sprintf("apps.%s", appName)
+        if err := viper.UnmarshalKey(configKey, &config); err != nil {
             fmt.Printf("Error reading configuration for app '%s': %v\n", appName, err)
             return
         }
@@ -112,13 +121,19 @@ var appCmd = &cobra.Command{
             return
         }
         
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = fmt.Sprintf(" Deploying application %s...", appName)
-        s.Start()
+        var s *spinner.Spinner
+        if !verbose {
+            s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+            s.Suffix = fmt.Sprintf(" Deploying application %s...", appName)
+            s.Start()
+        }
         
-        err := deploy.DeployApp(config, appName)
+        err := deploy.DeployApp(config, appName, verbose)
         
-        s.Stop()
+        if !verbose && s != nil {
+            s.Stop()
+        }
+        
         if err != nil {
             fmt.Printf("Error deploying application: %v\n", err)
         } else {
@@ -129,6 +144,8 @@ var appCmd = &cobra.Command{
 
 func GetCommand() *cobra.Command {
     dependenciesCmd.Flags().Bool("optional", false, "Deploy optional dependencies")
+    dependenciesCmd.Flags().Bool("verbose", false, "Show Helm output")
+    appCmd.Flags().Bool("verbose", false, "Show Helm output")
     deployCmd.AddCommand(dependenciesCmd)
     deployCmd.AddCommand(appCmd)
     return deployCmd

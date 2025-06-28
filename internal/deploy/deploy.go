@@ -51,7 +51,7 @@ type DependenciesConfig struct {
 	Dependencies map[string]DependencyConfig `mapstructure:"dependencies"`
 }
 
-func DeployDependencies(config DependenciesConfig, optional bool) error {
+func DeployDependencies(config DependenciesConfig, optional bool, verbose bool) error {
 	for depName, depConfig := range config.Dependencies {
 		// Skip optional dependencies if not requested
 		if depConfig.Optional && !optional {
@@ -78,8 +78,11 @@ func DeployDependencies(config DependenciesConfig, optional bool) error {
 
 		// Execute Helm command
 		cmd := exec.Command("helm", args...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		
+		if verbose {
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+		}
 		
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("helm deployment failed for dependency '%s': %w", depName, err)
@@ -89,7 +92,7 @@ func DeployDependencies(config DependenciesConfig, optional bool) error {
 	return nil
 }
 
-func DeployApp(config AppConfig, appName string) error {
+func DeployApp(config AppConfig, appName string, verbose bool) error {
 	// Validate required fields
 	if config.Deploy.ChartPath == "" {
 		return fmt.Errorf("chart_path is required")
@@ -123,8 +126,11 @@ func DeployApp(config AppConfig, appName string) error {
 
 	// Execute Helm command
 	cmd := exec.Command("helm", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 	
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("helm deployment failed: %w", err)

@@ -43,7 +43,8 @@ var buildCmd = &cobra.Command{
         
         // Read configuration for the application
         var config build.BuildConfig
-        if err := viper.UnmarshalKey(appName, &config); err != nil {
+        configKey := fmt.Sprintf("apps.%s", appName)
+        if err := viper.UnmarshalKey(configKey, &config); err != nil {
             fmt.Printf("Error reading configuration for app '%s': %v\n", appName, err)
             return
         }
