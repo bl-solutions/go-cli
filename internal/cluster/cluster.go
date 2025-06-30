@@ -22,40 +22,71 @@ THE SOFTWARE.
 package cluster
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
+    "fmt"
+    "os"
+    "os/exec"
+    "path/filepath"
 )
 
 func Create(verbose bool) error {
-	// Create k3d cluster with default name "local"
-	cmd := exec.Command("k3d", "cluster", "create", "local")
-	
-	if verbose {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("k3d cluster creation failed: %w", err)
-	}
-	
-	return nil
+    // Get user cache directory
+    cacheDir, err := os.UserCacheDir()
+    if err != nil {
+        return fmt.Errorf("failed to get user cache directory: %w", err)
+    }
+
+    // Create CLI cache directory if it doesn't exist
+    cliCacheDir := filepath.Join(cacheDir, "cli")
+    if err := os.MkdirAll(cliCacheDir, 0755); err != nil {
+        return fmt.Errorf("failed to create CLI cache directory: %w", err)
+    }
+
+    // Generate registry configuration file
+    registryConfigPath := filepath.Join(cliCacheDir, "registry.yaml")
+    registryConfig := `mirrors:
+  "localhost:5000":
+    endpoint:
+      - "http://localhost:5000"
+configs:
+  "localhost:5000":
+    auth:
+      username: ""
+      password: ""
+    tls:
+      insecure_skip_verify: true
+`
+
+    if err := os.WriteFile(registryConfigPath, []byte(registryConfig), 0644); err != nil {
+        return fmt.Errorf("failed to write registry configuration: %w", err)
+    }
+
+    // Create k3d cluster with registry configuration
+    cmd := exec.Command("k3d", "cluster", "create", "local", "--registry-config", registryConfigPath)
+
+    if verbose {
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+    }
+
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("k3d cluster creation failed: %w", err)
+    }
+
+    return nil
 }
 
 func Delete(verbose bool) error {
-	// Delete k3d cluster named "local"
-	cmd := exec.Command("k3d", "cluster", "delete", "local")
-	
-	if verbose {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-	
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("k3d cluster deletion failed: %w", err)
-	}
-	
-	return nil
-}
+    // Delete k3d cluster named "local"
+    cmd := exec.Command("k3d", "cluster", "delete", "local")
 
+    if verbose {
+        cmd.Stdout = os.Stdout
+        cmd.Stderr = os.Stderr
+    }
+
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("k3d cluster deletion failed: %w", err)
+    }
+
+    return nil
+}
