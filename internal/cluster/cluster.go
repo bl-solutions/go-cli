@@ -77,7 +77,7 @@ func stopRegistry(verbose bool) error {
     return nil
 }
 
-func removeRegistry(verbose bool) error {
+func removeRegistryContainer(verbose bool) error {
     removeCmd := exec.Command("docker", "rm", "local-registry")
     if verbose {
         removeCmd.Stdout = os.Stdout
@@ -157,7 +157,7 @@ func Delete(verbose bool, removeRegistry bool) error {
 
     // Remove registry only if --remove-registry flag is set
     if removeRegistry {
-        removeRegistry(verbose)
+        removeRegistryContainer(verbose)
     }
 
     return nil
