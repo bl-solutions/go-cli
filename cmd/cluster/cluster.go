@@ -46,13 +46,21 @@ var createCmd = &cobra.Command{
     Short: "Create a new cluster",
     Long:  `Create a new cluster with the specified configuration.`,
     Run: func(cmd *cobra.Command, args []string) {
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = " Creating cluster..."
-        s.Start()
+        verbose, _ := cmd.Flags().GetBool("verbose")
+        
+        var s *spinner.Spinner
+        if !verbose {
+            s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+            s.Suffix = " Creating cluster..."
+            s.Start()
+        }
 
-        err := cluster.Create()
+        err := cluster.Create(verbose)
 
-        s.Stop()
+        if !verbose && s != nil {
+            s.Stop()
+        }
+        
         if err != nil {
             fmt.Printf("Error creating cluster: %v\n", err)
         } else {
@@ -67,6 +75,8 @@ var deleteCmd = &cobra.Command{
     Short: "Delete a cluster",
     Long:  `Delete an existing cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
+        verbose, _ := cmd.Flags().GetBool("verbose")
+        
         // Ask for confirmation
         fmt.Print("Are you sure you want to delete the cluster? (y/N): ")
         var response string
@@ -77,13 +87,19 @@ var deleteCmd = &cobra.Command{
             return
         }
         
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = " Deleting cluster..."
-        s.Start()
+        var s *spinner.Spinner
+        if !verbose {
+            s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+            s.Suffix = " Deleting cluster..."
+            s.Start()
+        }
 
-        err := cluster.Delete()
+        err := cluster.Delete(verbose)
 
-        s.Stop()
+        if !verbose && s != nil {
+            s.Stop()
+        }
+        
         if err != nil {
             fmt.Printf("Error deleting cluster: %v\n", err)
         } else {
@@ -92,52 +108,11 @@ var deleteCmd = &cobra.Command{
     },
 }
 
-// startCmd represents the start subcommand
-var startCmd = &cobra.Command{
-    Use:   "start",
-    Short: "Start a cluster",
-    Long:  `Start an existing cluster.`,
-    Run: func(cmd *cobra.Command, args []string) {
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = " Starting cluster..."
-        s.Start()
-
-        err := cluster.Start()
-
-        s.Stop()
-        if err != nil {
-            fmt.Printf("Error starting cluster: %v\n", err)
-        } else {
-            fmt.Println("Cluster started successfully!")
-        }
-    },
-}
-
-// stopCmd represents the stop subcommand
-var stopCmd = &cobra.Command{
-    Use:   "stop",
-    Short: "Stop a cluster",
-    Long:  `Stop a running cluster.`,
-    Run: func(cmd *cobra.Command, args []string) {
-        s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-        s.Suffix = " Stopping cluster..."
-        s.Start()
-
-        err := cluster.Stop()
-
-        s.Stop()
-        if err != nil {
-            fmt.Printf("Error stopping cluster: %v\n", err)
-        } else {
-            fmt.Println("Cluster stopped successfully!")
-        }
-    },
-}
 
 func GetCommand() *cobra.Command {
+    createCmd.Flags().Bool("verbose", false, "Show k3d output")
+    deleteCmd.Flags().Bool("verbose", false, "Show k3d output")
     clusterCmd.AddCommand(createCmd)
     clusterCmd.AddCommand(deleteCmd)
-    clusterCmd.AddCommand(startCmd)
-    clusterCmd.AddCommand(stopCmd)
     return clusterCmd
 }

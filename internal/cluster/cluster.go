@@ -21,24 +21,41 @@ THE SOFTWARE.
 */
 package cluster
 
-import "time"
+import (
+	"fmt"
+	"os"
+	"os/exec"
+)
 
-func Create() error {
-	time.Sleep(2 * time.Second)
+func Create(verbose bool) error {
+	// Create k3d cluster with default name "local"
+	cmd := exec.Command("k3d", "cluster", "create", "local")
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("k3d cluster creation failed: %w", err)
+	}
+	
 	return nil
 }
 
-func Delete() error {
-	time.Sleep(2 * time.Second)
+func Delete(verbose bool) error {
+	// Delete k3d cluster named "local"
+	cmd := exec.Command("k3d", "cluster", "delete", "local")
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("k3d cluster deletion failed: %w", err)
+	}
+	
 	return nil
 }
 
-func Start() error {
-	time.Sleep(2 * time.Second)
-	return nil
-}
-
-func Stop() error {
-	time.Sleep(2 * time.Second)
-	return nil
-}
