@@ -26,6 +26,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	
+	"github.com/spf13/viper"
+	"go-cli/internal/helm"
 )
 
 type AppConfig struct {
@@ -49,6 +52,11 @@ type DependencyConfig struct {
 
 
 func InstallDependency(depName string, depConfig DependencyConfig, verbose bool) error {
+	// Configure Helm repositories before installation
+	if err := configureHelmRepos(verbose); err != nil {
+		return fmt.Errorf("failed to configure helm repositories: %w", err)
+	}
+	
 	// Build Helm command
 	args := []string{"upgrade", "--install", depName, depConfig.ChartName}
 	
@@ -130,7 +138,28 @@ func UninstallApp(config AppConfig, appName string, verbose bool) error {
 	return nil
 }
 
+func configureHelmRepos(verbose bool) error {
+	// Read repositories configuration
+	var repos map[string]helm.RepoConfig
+	if err := viper.UnmarshalKey("helm_repositories", &repos); err != nil {
+		// If no helm repositories configured, skip this step
+		return nil
+	}
+	
+	// If no repositories configured, skip this step
+	if len(repos) == 0 {
+		return nil
+	}
+	
+	return helm.ConfigureRepos(repos, verbose)
+}
+
 func InstallApp(config AppConfig, appName string, verbose bool) error {
+	// Configure Helm repositories before installation
+	if err := configureHelmRepos(verbose); err != nil {
+		return fmt.Errorf("failed to configure helm repositories: %w", err)
+	}
+	
 	// Validate required fields
 	if config.Install.ChartPath == "" {
 		return fmt.Errorf("chart_path is required")
