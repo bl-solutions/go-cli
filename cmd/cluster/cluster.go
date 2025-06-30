@@ -94,7 +94,9 @@ var deleteCmd = &cobra.Command{
             s.Start()
         }
 
-        err := cluster.Delete(verbose)
+        removeRegistry, _ := cmd.Flags().GetBool("remove-registry")
+        
+        err := cluster.Delete(verbose, removeRegistry)
 
         if !verbose && s != nil {
             s.Stop()
@@ -103,7 +105,11 @@ var deleteCmd = &cobra.Command{
         if err != nil {
             fmt.Printf("Error deleting cluster: %v\n", err)
         } else {
-            fmt.Println("Cluster deleted successfully!")
+            if removeRegistry {
+                fmt.Println("Cluster and registry deleted successfully!")
+            } else {
+                fmt.Println("Cluster deleted successfully! (Registry stopped but not removed)")
+            }
         }
     },
 }
@@ -112,6 +118,7 @@ var deleteCmd = &cobra.Command{
 func GetCommand() *cobra.Command {
     createCmd.Flags().Bool("verbose", false, "Show k3d output")
     deleteCmd.Flags().Bool("verbose", false, "Show k3d output")
+    deleteCmd.Flags().Bool("remove-registry", false, "Remove Docker registry container")
     clusterCmd.AddCommand(createCmd)
     clusterCmd.AddCommand(deleteCmd)
     return clusterCmd
