@@ -29,11 +29,11 @@ import (
 )
 
 type AppConfig struct {
-	ProjectPath string       `mapstructure:"project_path"`
-	Deploy      DeployConfig `mapstructure:"deploy"`
+	ProjectPath string        `mapstructure:"project_path"`
+	Install     InstallConfig `mapstructure:"install"`
 }
 
-type DeployConfig struct {
+type InstallConfig struct {
 	ChartPath  string `mapstructure:"chart_path"`
 	ValuesFile string `mapstructure:"values_file"`
 	Namespace  string `mapstructure:"namespace"`
@@ -44,85 +44,28 @@ type DependencyConfig struct {
 	ValuesFile  string `mapstructure:"values_file"`
 	Version     string `mapstructure:"version"`
 	Namespace   string `mapstructure:"namespace"`
-	Optional    bool   `mapstructure:"optional,omitempty"`
 }
 
-type DependenciesConfig struct {
-	Dependencies map[string]DependencyConfig `mapstructure:"dependencies"`
-}
 
-func DeployDependencies(config DependenciesConfig, optional bool, verbose bool) error {
-	for depName, depConfig := range config.Dependencies {
-		// Skip optional dependencies if not requested
-		if depConfig.Optional && !optional {
-			continue
-		}
 
-		// Build Helm command
-		args := []string{"upgrade", "--install", depName, depConfig.ChartName}
-		
-		// Add version if specified
-		if depConfig.Version != "" {
-			args = append(args, "--version", depConfig.Version)
-		}
-		
-		// Add namespace if specified
-		if depConfig.Namespace != "" {
-			args = append(args, "--namespace", depConfig.Namespace, "--create-namespace")
-		}
-		
-		// Add values file if specified
-		if depConfig.ValuesFile != "" {
-			args = append(args, "-f", depConfig.ValuesFile)
-		}
-
-		// Execute Helm command
-		cmd := exec.Command("helm", args...)
-		
-		if verbose {
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-		}
-		
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("helm deployment failed for dependency '%s': %w", depName, err)
-		}
-	}
-
-	return nil
-}
-
-func DeployApp(config AppConfig, appName string, verbose bool) error {
-	// Validate required fields
-	if config.Deploy.ChartPath == "" {
-		return fmt.Errorf("chart_path is required")
-	}
-	if config.Deploy.ValuesFile == "" {
-		return fmt.Errorf("values_file is required")
-	}
-	if config.Deploy.Namespace == "" {
-		return fmt.Errorf("namespace is required")
-	}
-
-	// Change to project directory
-	if err := os.Chdir(config.ProjectPath); err != nil {
-		return fmt.Errorf("failed to change to project directory '%s': %w", config.ProjectPath, err)
-	}
-
-	// Resolve chart path (relative to project or absolute)
-	chartPath := config.Deploy.ChartPath
-	if !filepath.IsAbs(chartPath) {
-		chartPath = filepath.Join(config.ProjectPath, chartPath)
-	}
-
-	// Resolve values file path (relative to project or absolute)
-	valuesPath := config.Deploy.ValuesFile
-	if !filepath.IsAbs(valuesPath) {
-		valuesPath = filepath.Join(config.ProjectPath, valuesPath)
-	}
-
+func InstallDependency(depName string, depConfig DependencyConfig, verbose bool) error {
 	// Build Helm command
-	args := []string{"upgrade", "--install", appName, chartPath, "-f", valuesPath, "--namespace", config.Deploy.Namespace, "--create-namespace"}
+	args := []string{"upgrade", "--install", depName, depConfig.ChartName}
+	
+	// Add version if specified
+	if depConfig.Version != "" {
+		args = append(args, "--version", depConfig.Version)
+	}
+	
+	// Add namespace if specified
+	if depConfig.Namespace != "" {
+		args = append(args, "--namespace", depConfig.Namespace, "--create-namespace")
+	}
+	
+	// Add values file if specified
+	if depConfig.ValuesFile != "" {
+		args = append(args, "-f", depConfig.ValuesFile)
+	}
 
 	// Execute Helm command
 	cmd := exec.Command("helm", args...)
@@ -133,7 +76,102 @@ func DeployApp(config AppConfig, appName string, verbose bool) error {
 	}
 	
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("helm deployment failed: %w", err)
+		return fmt.Errorf("helm installation failed for dependency '%s': %w", depName, err)
+	}
+
+	return nil
+}
+
+func UninstallDependency(depName string, depConfig DependencyConfig, verbose bool) error {
+	// Build Helm uninstall command
+	args := []string{"uninstall", depName}
+	
+	// Add namespace if specified
+	if depConfig.Namespace != "" {
+		args = append(args, "--namespace", depConfig.Namespace)
+	}
+
+	// Execute Helm command
+	cmd := exec.Command("helm", args...)
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("helm uninstall failed for dependency '%s': %w", depName, err)
+	}
+
+	return nil
+}
+
+func UninstallApp(config AppConfig, appName string, verbose bool) error {
+	// Build Helm uninstall command
+	args := []string{"uninstall", appName}
+	
+	// Add namespace if specified
+	if config.Install.Namespace != "" {
+		args = append(args, "--namespace", config.Install.Namespace)
+	}
+
+	// Execute Helm command
+	cmd := exec.Command("helm", args...)
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("helm uninstall failed for application '%s': %w", appName, err)
+	}
+
+	return nil
+}
+
+func InstallApp(config AppConfig, appName string, verbose bool) error {
+	// Validate required fields
+	if config.Install.ChartPath == "" {
+		return fmt.Errorf("chart_path is required")
+	}
+	if config.Install.ValuesFile == "" {
+		return fmt.Errorf("values_file is required")
+	}
+	if config.Install.Namespace == "" {
+		return fmt.Errorf("namespace is required")
+	}
+
+	// Change to project directory
+	if err := os.Chdir(config.ProjectPath); err != nil {
+		return fmt.Errorf("failed to change to project directory '%s': %w", config.ProjectPath, err)
+	}
+
+	// Resolve chart path (relative to project or absolute)
+	chartPath := config.Install.ChartPath
+	if !filepath.IsAbs(chartPath) {
+		chartPath = filepath.Join(config.ProjectPath, chartPath)
+	}
+
+	// Resolve values file path (relative to project or absolute)
+	valuesPath := config.Install.ValuesFile
+	if !filepath.IsAbs(valuesPath) {
+		valuesPath = filepath.Join(config.ProjectPath, valuesPath)
+	}
+
+	// Build Helm command
+	args := []string{"upgrade", "--install", appName, chartPath, "-f", valuesPath, "--namespace", config.Install.Namespace, "--create-namespace"}
+
+	// Execute Helm command
+	cmd := exec.Command("helm", args...)
+	
+	if verbose {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("helm installation failed: %w", err)
 	}
 
 	return nil

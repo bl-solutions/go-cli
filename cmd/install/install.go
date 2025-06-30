@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-package deploy
+package install
 
 import (
     "fmt"
@@ -31,23 +31,24 @@ import (
     "go-cli/internal/deploy"
 )
 
-// deployCmd represents the deploy command
-var deployCmd = &cobra.Command{
-    Use:   "deploy",
-    Short: "Deploy resources to the cluster",
-    Long:  `Deploy various resources and dependencies to the cluster.`,
+// installCmd represents the install command
+var installCmd = &cobra.Command{
+    Use:   "install",
+    Short: "Install resources to the cluster",
+    Long:  `Install various resources like dependencies to the cluster.`,
     Run: func(cmd *cobra.Command, args []string) {
         cmd.Help()
     },
 }
 
-// dependenciesCmd represents the dependencies subcommand
-var dependenciesCmd = &cobra.Command{
-    Use:   "dependencies",
-    Short: "Deploy application dependencies",
-    Long:  `Deploy application dependencies like PostgreSQL, Redis, etc. to the cluster.`,
+// dependencyCmd represents the dependency subcommand
+var dependencyCmd = &cobra.Command{
+    Use:   "dependency [dependency-name]",
+    Short: "Install a specific dependency",
+    Long:  `Install a specific dependency like PostgreSQL, Redis, etc. to the cluster.`,
+    Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
-        optional, _ := cmd.Flags().GetBool("optional")
+        depName := args[0]
         verbose, _ := cmd.Flags().GetBool("verbose")
         
         // Read dependencies configuration
@@ -57,42 +58,30 @@ var dependenciesCmd = &cobra.Command{
             return
         }
         
-        // Check if configuration exists
-        if len(deps) == 0 {
-            fmt.Println("No dependencies configuration found")
+        // Check if dependency exists in configuration
+        depConfig, exists := deps[depName]
+        if !exists {
+            fmt.Printf("Dependency '%s' not found in configuration\n", depName)
             return
-        }
-        
-        config := deploy.DependenciesConfig{Dependencies: deps}
-        
-        var message string
-        if optional {
-            message = " Deploying dependencies (including optional)..."
-        } else {
-            message = " Deploying dependencies..."
         }
         
         var s *spinner.Spinner
         if !verbose {
             s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-            s.Suffix = message
+            s.Suffix = fmt.Sprintf(" Installing dependency %s...", depName)
             s.Start()
         }
         
-        err := deploy.DeployDependencies(config, optional, verbose)
+        err := deploy.InstallDependency(depName, depConfig, verbose)
         
         if !verbose && s != nil {
             s.Stop()
         }
         
         if err != nil {
-            fmt.Printf("Error deploying dependencies: %v\n", err)
+            fmt.Printf("Error installing dependency '%s': %v\n", depName, err)
         } else {
-            if optional {
-                fmt.Println("Dependencies (including optional) deployed successfully!")
-            } else {
-                fmt.Println("Dependencies deployed successfully!")
-            }
+            fmt.Printf("Dependency '%s' installed successfully!\n", depName)
         }
     },
 }
@@ -100,8 +89,8 @@ var dependenciesCmd = &cobra.Command{
 // appCmd represents the app subcommand
 var appCmd = &cobra.Command{
     Use:   "app [app-name]",
-    Short: "Deploy an application",
-    Long:  `Deploy a specific application to the cluster.`,
+    Short: "Install an application",
+    Long:  `Install a specific application to the cluster.`,
     Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
         appName := args[0]
@@ -124,29 +113,28 @@ var appCmd = &cobra.Command{
         var s *spinner.Spinner
         if !verbose {
             s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-            s.Suffix = fmt.Sprintf(" Deploying application %s...", appName)
+            s.Suffix = fmt.Sprintf(" Installing application %s...", appName)
             s.Start()
         }
         
-        err := deploy.DeployApp(config, appName, verbose)
+        err := deploy.InstallApp(config, appName, verbose)
         
         if !verbose && s != nil {
             s.Stop()
         }
         
         if err != nil {
-            fmt.Printf("Error deploying application: %v\n", err)
+            fmt.Printf("Error installing application: %v\n", err)
         } else {
-            fmt.Printf("Application %s deployed successfully!\n", appName)
+            fmt.Printf("Application %s installed successfully!\n", appName)
         }
     },
 }
 
 func GetCommand() *cobra.Command {
-    dependenciesCmd.Flags().Bool("optional", false, "Deploy optional dependencies")
-    dependenciesCmd.Flags().Bool("verbose", false, "Show Helm output")
+    dependencyCmd.Flags().Bool("verbose", false, "Show Helm output")
     appCmd.Flags().Bool("verbose", false, "Show Helm output")
-    deployCmd.AddCommand(dependenciesCmd)
-    deployCmd.AddCommand(appCmd)
-    return deployCmd
+    installCmd.AddCommand(dependencyCmd)
+    installCmd.AddCommand(appCmd)
+    return installCmd
 }

@@ -30,7 +30,8 @@ import (
     "github.com/spf13/viper"
     "go-cli/cmd/build"
     "go-cli/cmd/cluster"
-    "go-cli/cmd/deploy"
+    "go-cli/cmd/install"
+    "go-cli/cmd/uninstall"
 )
 
 var cfgFile string
@@ -74,7 +75,8 @@ func init() {
     // Add subcommands
     RootCmd.AddCommand(cluster.GetCommand())
     RootCmd.AddCommand(build.GetCommand())
-    RootCmd.AddCommand(deploy.GetCommand())
+    RootCmd.AddCommand(install.GetCommand())
+    RootCmd.AddCommand(uninstall.GetCommand())
 }
 
 // initConfig reads in config file and ENV variables if set.

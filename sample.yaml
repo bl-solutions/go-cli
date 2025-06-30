@@ -7,7 +7,7 @@ apps:
       context: .
       build_args:
         - "PYTHON_VERSION=3.12"
-    deploy:
+    install:
       chart_path: ./helm/chart
       values_file: ./helm/values.yaml
       namespace: application
@@ -18,7 +18,7 @@ apps:
       image_name: ui:local
       dockerfile: Dockerfile
       context: .
-    deploy:
+    install:
       chart_path: ./k8s/helm
       values_file: ./k8s/values.yaml
       namespace: application
@@ -39,4 +39,3 @@ dependencies:
     values_file: ./configs/prometheus-values.yaml
     version: 55.0.0
     namespace: monitoring
-    optional: true
